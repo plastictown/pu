@@ -48,7 +48,7 @@ public:
     MyQueue(MyQueue<val_type>&& rhs):
     MyQueue(){
       log_me();
-      *this = std::forward<val_type>(rhs);
+      *this = std::forward<MyQueue<val_type>>(rhs);
     }// !ctor(&&)
 
     MyQueue(const MyQueue<val_type>& rhs) :
@@ -57,8 +57,18 @@ public:
       *this = rhs;
     }// !ctor(&&)
 
+    MyQueue(size_t n, const val_type& val):
+      MyQueue(){
+      if(n < 1) return;
+      reserve(n);
+      for(size_t i=0u; i < n; ++i){
+	  push(val);
+      }
+    }
+
     MyQueue<val_type>& operator= (MyQueue<val_type>&& rhs) {
       log_me();
+      clear();
       this->cap = rhs.cap;
       this->size = rhs.size;
       this->first = rhs.first;
@@ -75,6 +85,7 @@ public:
     }// !operator=(&&)
 
     MyQueue<val_type>& operator= (const MyQueue<val_type>& rhs) {
+      log_me();
       clear();
       if (rhs.empty()) {
         return *this;
@@ -87,8 +98,8 @@ public:
       size = rhs.size;
       first = 0;
       last = idx;
-      return *this; //TODO
-    }
+      return *this;
+    }// !operator=(&)
 
     /**
      * \brief realloc and normalize buffer with
@@ -116,7 +127,7 @@ public:
       cap = new_cap;
       first = 0;
       last = idx;
-    }
+    }// !flying_hamster
 
     //---PUSH---//
     void

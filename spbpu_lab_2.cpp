@@ -8,36 +8,43 @@
 
 #include <iostream>
 #include <utility>
+#include <string>
+#include <vector>
+#include <list>
+#include <iterator>
 using namespace std;
 
 #include "cycled_queue.h"
+#include "my_unique_ptr.h"
 
 int main() {
 
-  cout << "-init-" << endl;
+  std::cout << "-init-" << std::endl;
 
-  MyQueue<std::string> q={"abc", "cba", "bca","abc", "cba", "bca","abc", "cba", "bca","abc", "cba", "bca","abc", "cba", "bca"};
+  my_unique_ptr<std::string> ptr(new std::string("abc"));
+  std::cout << ptr->c_str() << std::endl;
+  ptr->assign("new string");
 
-  for(auto i = 0; i < 25; ++i){
-      q.push("new string");
-  }
+  std::string s = *ptr;
 
-  MyQueue<std::string> q3; 
-  q3 = q;
+  //my_unique_ptr<std::string> ptr2 = ptr;
 
-  while (true) {
-    try
-    {
-      std::cout << q3.pop() << std::endl;
-    }
-    catch (std::exception& e) 
-    {
-      std::cout << e.what() << std::endl;
-      break;
-    }
-  }
-  
-	cout << "-fini-" << endl;
-  cin.get();
+  if (!ptr)std::cout << "no object!" << std::endl;
+
+  my_unique_ptr<std::string> ptr3(new std::string("bla-bla"));
+
+  //ptr3 = ptr;
+
+  std::vector<my_unique_ptr<std::string>> v(5);
+  v[0] = my_unique_ptr<std::string>(new string("rvalue"));
+
+  std::list<my_unique_ptr<std::string>> l;
+
+  l.insert(l.end()
+    , std::make_move_iterator(v.begin())
+    , std::make_move_iterator(v.end()));
+
+	std::cout << "-fini-" << std::endl;
+  std::cin.get();
 	return 0;
 }
