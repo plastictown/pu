@@ -31,9 +31,9 @@ public:
 {
     log_me();
 		alloc(init_val_);
-}
+}// !ctor(default)
 
-    // TODO: inefficient implementation
+    //---IL ctor---//
     MyQueue (const std::initializer_list<val_type>& l) :
 	MyQueue ()
     {
@@ -43,7 +43,53 @@ public:
 	{
 	  push (el);
 	}
+    }// !ctor(IL)
+
+    MyQueue(MyQueue<val_type>&& rhs):
+    MyQueue(){
+      log_me();
+      *this = std::forward<val_type>(rhs);
+    }// !ctor(&&)
+
+    MyQueue(const MyQueue<val_type>& rhs) :
+      MyQueue() {
+      log_me();
+      *this = rhs;
+    }// !ctor(&&)
+
+    MyQueue<val_type>& operator= (MyQueue<val_type>&& rhs) {
+      log_me();
+      this->cap = rhs.cap;
+      this->size = rhs.size;
+      this->first = rhs.first;
+      this->last = rhs.last;
+      this->m_data = rhs.m_data;
+
+      rhs.m_data = nullptr;
+      rhs.cap = 0u;
+      rhs.size = 0u;
+      rhs.first = 0u;
+      rhs.last = 0u;
+
+      return *this;
+    }// !operator=(&&)
+
+    MyQueue<val_type>& operator= (const MyQueue<val_type>& rhs) {
+      clear();
+      if (rhs.empty()) {
+        return *this;
+      }
+      flying_hamster(rhs.cap);
+      size_t idx = 0u;
+      for (size_t i = rhs.first; i != rhs.last; i = rhs.next(i),++idx) {
+        m_data[idx]=rhs.m_data[i];
+      }
+      size = rhs.size;
+      first = 0;
+      last = idx;
+      return *this; //TODO
     }
+
     /**
      * \brief realloc and normalize buffer with
      * specified capacity
@@ -63,7 +109,8 @@ public:
 	{
 	  pTemp[idx] = std::move (m_data[i]);
 	}
-      delete[] m_data;
+      if(nullptr !=m_data)
+        delete[] m_data;
       m_data = pTemp;
       pTemp = nullptr;
       cap = new_cap;
@@ -91,7 +138,7 @@ public:
 	  m_data[last] = el;
 	}
     } // !push(&)
-
+    
     void
     push (val_type&& el)
     {
@@ -112,7 +159,7 @@ public:
 	}
     } // !push(&&)
 
-
+    //---RESERVE---//
     void
     reserve (size_t sz)
     {
@@ -124,7 +171,7 @@ public:
 	}
       // alllocate some yet memory
       flying_hamster (size + sz);
-    }
+    } // !reserve
 
     //---POP---//
     val_type
@@ -158,7 +205,10 @@ private:
       if (nullptr != m_data)
 	delete[] m_data;
       m_data = nullptr;
-      cap = 0u;
+      cap   = 0u;
+      size  = 0u;
+      first = 0u;
+      last  = 0u;
     }
 
     // stupid alloc
