@@ -36,3 +36,7 @@
 *.vcproj
 *.vcxproj
 *.user
+*.filters
+*.db
+Debug
+Release
