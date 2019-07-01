@@ -30,7 +30,7 @@ public:
 		, size {0u}
 {
     log_me();
-		alloc(init_val_);
+		//alloc(init_val_);
 }// !ctor(default)
 
     //---IL ctor---//
@@ -48,13 +48,32 @@ public:
     MyQueue(MyQueue<val_type>&& rhs):
     MyQueue(){
       log_me();
-      *this = std::forward<MyQueue<val_type>>(rhs);
+	  this->cap = rhs.cap;
+	  this->size = rhs.size;
+	  this->first = rhs.first;
+	  this->last = rhs.last;
+	  this->m_data = rhs.m_data;
+
+	  rhs.m_data = nullptr;
+	  rhs.cap = 0u;
+	  rhs.size = 0u;
+	  rhs.first = 0u;
+	  rhs.last = 0u;
     }// !ctor(&&)
 
     MyQueue(const MyQueue<val_type>& rhs) :
       MyQueue() {
       log_me();
-      *this = rhs;
+	  if (rhs.empty()) return;
+
+	  flying_hamster(rhs.cap);
+	  size_t idx = 0u;
+	  for (size_t i = rhs.first; i != rhs.last; i = rhs.next(i), ++idx) {
+		  m_data[idx] = rhs.m_data[i];
+	  }
+	  size = rhs.size;
+	  first = 0;
+	  last = idx;
     }// !ctor(&&)
 
     MyQueue(size_t n, const val_type& val):
@@ -69,6 +88,7 @@ public:
     MyQueue<val_type>& operator= (MyQueue<val_type>&& rhs) {
       log_me();
       clear();
+
       this->cap = rhs.cap;
       this->size = rhs.size;
       this->first = rhs.first;
@@ -86,11 +106,12 @@ public:
 
     MyQueue<val_type>& operator= (const MyQueue<val_type>& rhs) {
       log_me();
-      clear();
       if (rhs.empty()) {
+		clear();
         return *this;
       }
-      flying_hamster(rhs.cap);
+	  first = 0u; last = 0u; size = 0u;
+      reserve(rhs.cap);
       size_t idx = 0u;
       for (size_t i = rhs.first; i != rhs.last; i = rhs.next(i),++idx) {
         m_data[idx]=rhs.m_data[i];
@@ -134,20 +155,13 @@ public:
     push (const val_type& el)
     {
       log_me();
-      if (full ())
-	{
-	  flying_hamster (cap * 2);
-	  m_data[last + 1] = el;
-	  ++size;
-	  ++last;
-	}
-      else
-	{
-	  if (!empty ())
-	    last = next (last);
-	  ++size;
+	  if (full())
+		  flying_hamster(cap * 2);
+
+	  if (!empty())
+		  last = next(last);
 	  m_data[last] = el;
-	}
+	  ++size;
     } // !push(&)
     
     void
@@ -155,19 +169,12 @@ public:
     {
       log_me();
       if (full ())
-	{
-	  flying_hamster (cap * 2);
-	  m_data[last + 1] = std::forward<val_type>(el);
+	flying_hamster (cap * 2);
+
+	  if (!empty())
+		last = next(last);
+	  m_data[last] = std::move(el);
 	  ++size;
-	  ++last;
-	}
-      else
-	{
-	  if (!empty ())
-	    last = next (last);
-	  ++size;
-	  m_data[last] = std::forward<val_type>(el);
-	}
     } // !push(&&)
 
     //---RESERVE---//
@@ -183,6 +190,21 @@ public:
       // alllocate some yet memory
       flying_hamster (size + sz);
     } // !reserve
+
+
+	//------------------------------------------------------//
+
+	template<typename T> void _push(T&& el) {
+		if (full())
+			flying_hamster(cap * 2);
+
+		if (!empty())
+			last = next(last);
+		m_data[last] = std::forward<T>(el);
+		++size;
+	}
+
+	//------------------------------------------------------//
 
     //---POP---//
     val_type

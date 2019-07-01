@@ -16,10 +16,8 @@ template<class T>
   my_unique_ptr(const my_unique_ptr&) = delete;
   my_unique_ptr<T>& operator=(const my_unique_ptr<T>&) = delete;
 
-  my_unique_ptr(T* ptr):
-    my_unique_ptr(){
+  my_unique_ptr(T* ptr){
     data = ptr;
-    ptr = nullptr;
   }
 
   my_unique_ptr<T>& operator=(my_unique_ptr<T>&& rhs) {
@@ -31,8 +29,7 @@ template<class T>
     return *this;
   }
 
-  my_unique_ptr(my_unique_ptr<T>&& rhs):
-    my_unique_ptr(){
+  my_unique_ptr(my_unique_ptr<T>&& rhs){
     *this = std::forward<my_unique_ptr<T>>(rhs);
   }
 
