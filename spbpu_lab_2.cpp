@@ -15,6 +15,7 @@
 #include <cstdint>
 #include <climits>
 #include <memory>
+#include <typeinfo>
 using namespace std;
 
 #include "cycled_queue.h"
@@ -52,7 +53,7 @@ std::string operator""_toBinStr_1(unsigned long long val) {
 	for (long long i = sizeof(val)*CHAR_BIT - 1; i >=0; --i)
 
 	{
-		res.push_back(((val & (1<<i)) ? 1 : 0));
+		res.push_back(((val & (1l<<i)) ? 1 : 0));
 		//val >>= 1;
 	}
 	return res;
@@ -62,6 +63,12 @@ constexpr int bint_from_str_1(const char* str, unsigned d) {
 }
 constexpr int operator""_from_binary_1(const char* str) {
 	return bint_from_str(str, 0);
+}
+
+
+std::unique_ptr<std::string> operator~(std::unique_ptr<std::string>& p){
+	*p += "_1";
+	return std::move(p);
 }
 
 
@@ -200,7 +207,7 @@ int main() {
       << "in_range = " << in_range << std::endl
       << "get_in_range = " << check_in_range << std::endl;
     
-    int check[cc.get_min()];
+    int check[cc.get_max()];
 	}
 
 	//////////////////////////////////////////////////////////////////////////////////////////////
@@ -215,6 +222,10 @@ int main() {
 			for(const auto& p: v){
         std::cout << *p << std::endl;
       }
+
+			for (auto p : v) {
+				delete p;
+			}
 		}
 
 		//5.b - модифицируйте задание 5.а:
@@ -226,12 +237,11 @@ int main() {
      
      using sptr = std::unique_ptr<std::string>;
 
-      // TODO:
-     std::vector<sptr> v { 
-       new std::string("aa"), 
-       new std::string("bb"),  
-       new std::string("cc")
-     };
+	 std::vector<sptr> v;
+	 v.reserve(3);
+	 v.emplace_back(std::make_unique<std::string>("aa"));
+	 v.emplace_back(std::make_unique<std::string>("bb"));
+	 v.emplace_back(std::make_unique<std::string>("cc"));
 
 		{
 			//Распечатайте все строки
@@ -240,10 +250,15 @@ int main() {
       }
 
 			//??? Уничтожение динамически созданных объектов?
+	        //Уничтожатся автоматически
 		} //???
 
 		{//5.c - дополните задание 5.b добавьте возможность изменять хранящиеся строки
-		 //следующим образом (например, добавить указанный суффикс: "AAA" -> "AAA_1")	 
+		 //следующим образом (например, добавить указанный суффикс: "AAA" -> "AAA_1")
+
+			for (auto&& p : v) {
+				p = std::move(~p); // Корректно ли?
+			}
 
 		}
 
@@ -254,6 +269,11 @@ int main() {
 		 //С помощью unique_ptr::operator[] заполните обернутый массив значениями
 		 //Когда происходит освобождения памяти?
 
+			std::unique_ptr<std::string[]> pstr(new std::string[3]);
+			pstr[0] = "A";
+			pstr[1] = "B";
+			pstr[2] = "C";
+
 		}
 
 		{//5.e - массивы динамических объектов и пользовательская delete-функция (функтор)
@@ -263,6 +283,13 @@ int main() {
 		 //освобождения памяти
 
 			std::string* arStrPtr[] = { new std::string("aa"), new std::string("bb"), new std::string("cc") };
+			auto deleter = [arStrPtr](std::string* data)
+			{
+				for (int i = 0; i < sizeof(arStrPtr) / sizeof(std::string*); ++i) {
+					delete arStrPtr[i];
+				}
+			};
+			std::unique_ptr<std::string[], decltype(deleter)> pstr((std::string*)arStrPtr, deleter);
 
 		}
 
