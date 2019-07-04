@@ -15,135 +15,7 @@
 #include <queue>
 #include<ostream>
 
-struct A {
-	A(int n) :
-		m_n(n) {}
-	operator int() { return m_n; }
-	friend std::ostream& operator << (std::ostream& out, const A& a);
-	int m_n;
-};
-
-std::ostream& operator << (std::ostream& out, const A& a) {
-	out << a.m_n;
-	return out;
-}
-
-//--- 1 ---//
-template<typename T>
-  void PrintAnyCont( const T& c){
-    for (const auto& el: c){
-      if constexpr ( std::is_pointer<std::decay<T>::type>::value ){
-        std::cout << *el << std::endl;
-      }else{
-        std::cout << el << std::endl;
-      }// !else
-    }// !for
-  }// !PrintAnyCont
-
-  //--- 2 ---//
-  template<template <typename> typename Cont, typename Type>
-  void PrintAdapter(const Cont<typename Type>& cont) {
-	  struct inner_t : public Cont<typename Type> {
-		  using Cont<typename Type>::c;
-	  };// !struct
-	  const auto& inner = static_cast<const inner_t&>(cont).c;
-
-	  for (const auto& el : inner) {
-		  std::cout << el << std::endl;
-	  }// !for
-  }// !PrintAdapter
-
-  //--- 3 ---//
-template <typename First, typename Second>
-auto strange_sum(First& first, const Second& second) {
-	if constexpr (std::is_same<std::decay<First>::type, std::vector<Second>>::value) {
-			for (auto& i : first) { i += second; }
-			return first;
-	}
-	else{
-		return first + second;
-	}// !else
-}// !strange_sum
-
-
-//--- 4 ---//
-template<typename Current, typename... Args>
-void MyPrint(const Current& current, Args... args) {
-	std::cout << current << std::endl;
-	MyPrint(args...);
-	}
-
-void MyPrint() {
-
-}
-
-template<typename... Args>
-void MyPrint2(const Args& ... args) {
-	((std::cout << args << std::endl), ...);
-}
-
-//--- 5 ---//
-template <typename C, typename Current, typename... Args>
-void EraseAll(C& cont, Current current, Args... args) {
-	auto it = std::remove_if(std::begin(cont), std::end(cont),[&current](const auto& val) {return val == current; });
-	cont.erase(it, std::end(cont));
-
-	EraseAll(cont, args...);
-}
-
-template<typename C>
-void EraseAll(C& cont) {
-	// stub
-}
-
-//--- 6 ---//
-template< typename Set, typename Current, typename... Args>
-bool try_insert_all(Set& s, Current current, Args... args) {
-	auto [i, r] = s.insert(current);
-	return (r && try_insert_all(s, args...));
-}
-
-template<typename Set>
-bool try_insert_all(Set& s) {
-	return true;
-}
-//--- 7 ---//
-template <typename Min, typename Max, typename Current, typename... Args>
-bool InRange(Min min, Max max, Current cur, Args... args) {
-	bool in_range = (cur>=min && cur <= max);
-	return (in_range && InRange(min, max, args...));
-}
-
-template <typename Min, typename Max>
-bool InRange(Min min, Max max) {
-	return true;
-}
-
-//--- 8 ---//
-template<typename Tuple, size_t N>
-void print_tuple(const Tuple& t) {
-	std::cout << std::get<N>(t) << std::endl;
-	if constexpr(N>0)
-		print_tuple<Tuple, N-1>(t);
-	}
-
-
-template<typename... Args> struct book {
-
-	void set(Args... args) {
-		m_data = std::make_tuple(args...);
-	}
-	bool operator < (const book<Args...>& other) const {
-		return (m_data < other.m_data);
-	}
-	void print() const {
-		print_tuple<decltype(m_data), std::tuple_size<decltype(m_data)>::value - 1>(m_data);
-	}
-
-	std::tuple<Args...> m_data;
-};
-
-
+#include "lab4.h"
 
 int main()
 {
@@ -322,7 +194,7 @@ int main()
 
 	/******************************************************************************/
 
-	//Задание 9. shared_ptr и weak_ptr
+	//Задание 9. shared_ptr и weak_ptr+
 	//Создаем генеалогическое дерево посредством класса human. В классе хранятся:
 	//имя - string
 	//возможно признак: жив или уже нет...
@@ -352,8 +224,34 @@ int main()
 
 
 		//...
-		;
-	}
 
+		std::shared_ptr<human> grandM1(new human("Lili Potter",false));
+		std::shared_ptr<human> grandF1(new human("James Potter",false));
+		std::shared_ptr<human> Jinney(new human("Jinney Whizley"));
+
+		auto Bilbo = human::child(grandF1, grandM1, "Bilbo Baggins");
+		auto Harry = human::child(grandF1, grandM1, "Harry Potter");
+		auto Harry_son = human::child(Harry, Jinney, "Potter jn.");
+
+		auto Frodo = human::child(Bilbo, nullptr, "Frodo Baggins");
+		auto Santa = human::child(Frodo, nullptr, "Santa Claus");
+
+		human::print(grandM1);
+
+		~(*Harry); // KILL HIM!!!
+
+		std::cout << std::endl;
+		human::print(grandF1);
+
+		std::cout << std::endl;
+		human::print_parents(Santa);
+		std::cout << std::endl;
+
+		human::print_cow_with_moo();
+	}// !9
+
+
+
+	std::cin.get();
 	return 0;
 }

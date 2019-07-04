@@ -44,7 +44,7 @@ constexpr int operator""_from_binary(const char* str) {
 std::string operator""_toBinStr(unsigned long long val) {
 	unsigned long long bin = 0;
 	for (size_t i = 0u; i < (sizeof(val)*CHAR_BIT -1); ++i)
-		bin += (val & (1<<i)) ? _pow(10, i) : 0;
+		bin += (val & (1ull<<i)) ? _pow(10, i) : 0;
 	return std::string("0b")+std::to_string(bin);
 }
 std::string operator""_toBinStr_1(unsigned long long val) {
@@ -53,7 +53,7 @@ std::string operator""_toBinStr_1(unsigned long long val) {
 	for (long long i = sizeof(val)*CHAR_BIT - 1; i >=0; --i)
 
 	{
-		res.push_back(((val & (1l<<i)) ? 1 : 0));
+		res.push_back(((val & (1ll<<i)) ? 1 : 0));
 		//val >>= 1;
 	}
 	return res;
